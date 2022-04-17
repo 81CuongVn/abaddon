@@ -21,7 +21,7 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup MSYS2
+      - name: Setup MSYS2 (1)
         uses: haya14busa/action-cond@v1
         id: setupmsys
         with:
@@ -49,7 +49,9 @@ jobs:
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-gtkmm3
             mingw-w64-x86_64-libhandy
-      - uses: msys2/setup-msys2@v2
+
+      - name: Setup MSYS2 (2)
+        uses: msys2/setup-msys2@v2
         with:
           msystem: mingw64
           update: true
@@ -72,10 +74,18 @@ jobs:
           cp /mingw64/share/glib-2.0/schemas/gschemas.compiled build/artifactdir/share/glib-2.0/schemas
           cat "ci/msys-deps.txt" | sed 's/\r$//' | xargs -I % cp /mingw64% build/artifactdir/bin || :
 
-      - name: Upload build
+      - name: Upload build (1)
+        uses: haya14busa/action-cond@v1
+        id: buildname
+        with:
+          cond: ${{ matrix.mindeps == true }}
+          if_true: "${{ matrix.buildtype }}-mindeps"
+          if_false: "${{ matrix.buildtype }}"
+
+      - name: Upload build (2)
         uses: actions/upload-artifact@v2
         with:
-          name: build-windows-msys2-${{ matrix.buildtype }}
+          name: build-windows-msys2-${{ steps.buildname.outputs.value }}
           path: build/artifactdir
 
   mac:
